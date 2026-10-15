@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Starfall">
+<meta name="theme-color" content="#2a1650">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Starfall Café</title>
+<style>
+:root{--sab:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;touch-action:none;-webkit-touch-callout:none;-webkit-text-size-adjust:100%;position:fixed;inset:0;width:100%;background:#1a1033;font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#fff}
+#app{position:fixed;inset:0;height:100dvh;background:radial-gradient(ellipse at top,#5b3c9e 0%,#2a1650 55%,#140a2c 100%)}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;overflow-y:auto;touch-action:pan-y;padding:calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 16px);text-align:center}
+.screen.on{display:flex}
+h1{font-size:clamp(40px,9vw,84px);font-weight:900;letter-spacing:1px;background:linear-gradient(90deg,#ffd1e8,#fff,#b9e9ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 18px #ff7ac6aa)}
+.sub{opacity:.85;margin:6px 0 22px;font-size:clamp(14px,3.4vw,18px)}
+.btn{border:0;border-radius:999px;padding:14px 34px;margin:7px;font-size:18px;font-weight:800;color:#2a1650;background:linear-gradient(180deg,#fff,#ffd6ec);box-shadow:0 6px 0 #c2649b,0 10px 24px #0006;cursor:pointer;min-width:220px}
+.btn:active{transform:translateY(3px);box-shadow:0 3px 0 #c2649b}
+.btn.alt{background:linear-gradient(180deg,#e7f7ff,#b9e4ff);box-shadow:0 6px 0 #5a8fc2,0 10px 24px #0006}
+.cast{display:flex;gap:10px;justify-content:center;margin-bottom:10px}
+.cast img{height:clamp(120px,24vh,220px);filter:drop-shadow(0 8px 16px #0008);animation:bob 3s ease-in-out infinite}
+.cast img:nth-child(2){animation-delay:-1s}.cast img:nth-child(3){animation-delay:-2s}
+@keyframes bob{50%{transform:translateY(-8px)}}
+.cards{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;max-width:900px}
+.card{width:min(30vw,240px);min-width:150px;background:#ffffff18;border:2px solid #ffffff30;border-radius:20px;padding:10px;cursor:pointer;transition:.15s}
+.card:hover,.card.sel{border-color:#ffd1e8;background:#ffffff2a;transform:translateY(-4px)}
+.card img{width:100%;max-height:26vh}
+.card b{display:block;font-size:18px}.card small{opacity:.8;font-size:12.5px;display:block;line-height:1.3}
+#hud{position:absolute;top:0;left:0;right:0;display:none;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 16px) 0 calc(env(safe-area-inset-left) + 16px);font-weight:800;font-size:18px;text-shadow:0 2px 6px #000a;pointer-events:none}
+#hud.on{display:flex}
+#combo{position:absolute;top:calc(env(safe-area-inset-top) + 50px);width:100%;text-align:center;font-weight:900;font-size:26px;color:#ffe27a;text-shadow:0 2px 8px #000;pointer-events:none}
+#trophyList{touch-action:pan-y;-webkit-overflow-scrolling:touch;width:min(680px,94vw);max-height:62vh;overflow:auto;text-align:left;background:#0004;border-radius:18px;padding:8px}
+.tr{display:flex;align-items:center;gap:12px;padding:10px;border-bottom:1px solid #ffffff1a;opacity:.45}
+.tr.got{opacity:1}
+.ico{width:42px;height:42px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:inset 0 -4px 0 #0003}
+.B{background:linear-gradient(#e7a36b,#a8622e)}.S{background:linear-gradient(#f2f4f8,#9aa3b5)}.G{background:linear-gradient(#ffe68a,#d39b16)}.P{background:linear-gradient(#e9f1ff,#9ab0dd);box-shadow:0 0 12px #b9d0ff}
+.tr b{display:block}.tr small{opacity:.8}
+#pop{position:absolute;top:calc(env(safe-area-inset-top) + 12px);right:12px;display:flex;flex-direction:column;gap:8px;pointer-events:none;z-index:9}
+.toast{display:flex;align-items:center;gap:10px;background:#120a24ee;border:1px solid #ffffff40;border-radius:14px;padding:8px 14px 8px 8px;animation:tin .4s ease-out,tout .4s ease-in 3.2s forwards;box-shadow:0 8px 24px #0008;font-size:14px;text-align:left}
+@keyframes tin{from{transform:translateX(120%)}}@keyframes tout{to{transform:translateX(130%);opacity:0}}
+.prog{margin:8px 0 14px;opacity:.9}
+.results p{font-size:20px;margin:4px}
+.hint{opacity:.7;font-size:13px;margin-top:14px}
+@media (max-width:600px){.cards{flex-direction:column;align-items:stretch;width:100%}.card{width:100%;display:grid;grid-template-columns:90px 1fr;align-items:center;text-align:left;gap:4px 12px}.card img{grid-row:span 3;max-height:110px}.cast img{height:min(20vh,150px)}.btn{min-width:200px}}
+#mute{position:absolute;bottom:calc(env(safe-area-inset-bottom) + 10px);right:12px;background:#0004;border:0;color:#fff;border-radius:50%;width:42px;height:42px;font-size:20px;z-index:8}
+</style></head>
+<body><div id="app">
+<canvas id="cv"></canvas>
+<div id="hud"><span id="hScore">0</span><span id="hLives">♥♥♥</span><span id="hTime">60</span></div>
+<div id="combo"></div>
+
+<div class="screen on" id="sTitle">
+  <div class="cast"><img src="assets/sakura.svg" alt="Sakura"><img src="assets/rei.svg" alt="Rei"><img src="assets/mina.svg" alt="Mina"></div>
+  <h1>Starfall Café</h1>
+  <div class="sub">Catch the falling treats. Dodge the storm clouds. Collect every trophy.</div>
+  <button class="btn" id="bPlay">Play</button>
+  <button class="btn alt" id="bTrophies">Trophies</button>
+  <div class="hint">Mac: ← → or A/D to move · iPhone: drag anywhere · P / Esc to pause</div>
+</div>
+
+<div class="screen" id="sSelect">
+  <h1 style="font-size:clamp(30px,6vw,52px)">Choose your barista</h1><div class="sub">Each has a little perk</div>
+  <div class="cards" id="cards"></div>
+  <button class="btn alt" data-go="sTitle">Back</button>
+</div>
+
+<div class="screen" id="sTrophies">
+  <h1 style="font-size:clamp(30px,6vw,52px)">Trophies</h1>
+  <div class="prog" id="tProg"></div>
+  <div id="trophyList"></div>
+  <button class="btn alt" data-go="sTitle" style="margin-top:14px">Back</button>
+</div>
+
+<div class="screen" id="sPause"><h1>Paused</h1><button class="btn" id="bResume">Resume</button><button class="btn alt" id="bQuit">Quit to title</button></div>
+
+<div class="screen results" id="sOver">
+  <img id="oImg" style="height:22vh;filter:drop-shadow(0 8px 16px #0008)">
+  <h1 style="font-size:clamp(30px,6vw,52px)" id="oTitle">Shift complete!</h1>
+  <p id="oScore"></p><p id="oBest" style="opacity:.8;font-size:16px"></p><p id="oQuote" style="font-style:italic;opacity:.9;font-size:16px;max-width:520px"></p>
+  <button class="btn" id="bAgain">Play again</button>
+  <button class="btn alt" id="bOverTitle">Title</button>
+</div>
+<div id="pop"></div>
+<button id="mute" aria-label="Sound">🔊</button>
+</div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const CHARS=[
+ {id:"sakura",name:"Sakura Hoshino",age:24,role:"Café owner",perk:"Wider tray",color:"#ff8fb8",w:1.25,speed:1,lives:3,
+  quotes:["Lovely work! Tea's on the house.","My café's never been so busy!"]},
+ {id:"rei",name:"Rei Kurosawa",age:27,role:"Motorbike courier",perk:"Fastest mover",color:"#e0475b",w:1,speed:1.45,lives:3,
+  quotes:["Not bad. Again — faster.","Deliveries done. You keep up well."]},
+ {id:"mina",name:"Mina Aoyama",age:22,role:"Uni student & part-time barista",perk:"Extra life",color:"#7fd6c9",w:1,speed:1.1,lives:4,
+  quotes:["Yay! Lecture notes can wait!","That was so fun — one more?"]},
+];
+const TROPHIES=[
+ ["first","Nice Catch","Catch your first item","B"],
+ ["round1","First Shift","Finish a round","B"],
+ ["sakura","Café Debut","Play a round as Sakura","B"],
+ ["rei","Midnight Rider","Play a round as Rei","B"],
+ ["mina","Campus Star","Play a round as Mina","B"],
+ ["combo10","In the Groove","Reach a 10× combo","B"],
+ ["s1000","Rising Star","Score 1,000 in one round","B"],
+ ["gold","Lucky Star","Catch a golden star","B"],
+ ["hearts10","Heartfelt","Catch 10 hearts in one round","B"],
+ ["total100","Sweet Tooth","Catch 100 items in total","B"],
+ ["shield","Umbrella Ready","Catch an umbrella power-up","B"],
+ ["room","Trophy Hunter","Visit the trophy room","B"],
+ ["combo30","Unstoppable","Reach a 30× combo","S"],
+ ["s3000","Shining Star","Score 3,000 in one round","S"],
+ ["rounds10","Regular Customer","Play 10 rounds","S"],
+ ["s5000","Starfall Legend","Score 5,000 in one round","G"],
+ ["plat","Starfall Café Platinum","Earn every other trophy","P"],
+];
+const ICON={B:"★",S:"★",G:"★",P:"♛"};
+let save={};try{save=JSON.parse(localStorage.getItem("sfc_save")||"{}")}catch(e){}
+save.t=save.t||{};save.total=save.total||0;save.rounds=save.rounds||0;save.best=save.best||0;
+const persist=()=>{try{localStorage.setItem("sfc_save",JSON.stringify(save))}catch(e){}};
+function unlock(id){
+  if(save.t[id])return;save.t[id]=Date.now();persist();
+  const t=TROPHIES.find(x=>x[0]===id);
+  const d=document.createElement("div");d.className="toast";
+  d.innerHTML=`<div class="ico ${t[3]}">${ICON[t[3]]}</div><div><small>You've earned a trophy</small><br><b>${t[1]}</b></div>`;
+  $("pop").appendChild(d);setTimeout(()=>d.remove(),3800);sfx(t[3]==="P"?"plat":"trophy");
+  if(id!=="plat"&&TROPHIES.every(x=>x[0]==="plat"||save.t[x[0]]))setTimeout(()=>unlock("plat"),900);
+}
+function renderTrophies(){
+  const got=TROPHIES.filter(t=>save.t[t[0]]).length;
+  $("tProg").textContent=`${got} / ${TROPHIES.length} earned · ${Math.round(got/TROPHIES.length*100)}%`;
+  $("trophyList").innerHTML=TROPHIES.map(t=>`<div class="tr ${save.t[t[0]]?"got":""}"><div class="ico ${t[3]}">${ICON[t[3]]}</div><div><b>${t[1]}</b><small>${t[2]}${save.t[t[0]]?" · ✓ "+new Date(save.t[t[0]]).toLocaleDateString():""}</small></div></div>`).join("");
+}
+// ---------- audio ----------
+let actx=null,muted=localStorage.getItem("sfc_mute")==="1";
+$("mute").textContent=muted?"🔇":"🔊";
+function sfx(k){
+  if(muted)return;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();}catch(e){return}
+  const seq={catch:[[880,.06]],gold:[[988,.07],[1319,.1]],bad:[[160,.25]],trophy:[[784,.08],[988,.08],[1175,.16]],plat:[[523,.1],[659,.1],[784,.1],[1047,.3]],power:[[660,.06],[880,.06],[1100,.1]]}[k];
+  let t=actx.currentTime;
+  for(const[f,d]of seq){const o=actx.createOscillator(),g=actx.createGain();o.type=k==="bad"?"sawtooth":"triangle";o.frequency.value=f;g.gain.setValueAtTime(.12,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(actx.destination);o.start(t);o.stop(t+d);t+=d*.8}
+}
+function unlockAudio(){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==="suspended")actx.resume();const b=actx.createBuffer(1,1,22050),src=actx.createBufferSource();src.buffer=b;src.connect(actx.destination);src.start(0)}catch(e){}}
+["touchstart","touchend","pointerdown","keydown"].forEach(ev=>addEventListener(ev,unlockAudio,{passive:true}));
+document.addEventListener("visibilitychange",()=>{if(document.hidden)pause(true)});
+["gesturestart","gesturechange","dblclick"].forEach(ev=>document.addEventListener(ev,e=>e.preventDefault(),{passive:false}));
+document.addEventListener("touchmove",e=>{if(!e.target.closest("#trophyList,.screen.on"))e.preventDefault()},{passive:false});
+$("mute").onclick=()=>{muted=!muted;localStorage.setItem("sfc_mute",muted?"1":"0");$("mute").textContent=muted?"🔇":"🔊"};
+// ---------- screens ----------
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));
+  if(id==="sTrophies"){unlock("room");renderTrophies()}}
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>show(b.dataset.go));
+$("bPlay").onclick=()=>show("sSelect");$("bTrophies").onclick=()=>show("sTrophies");
+$("cards").innerHTML=CHARS.map((c,i)=>`<div class="card" data-i="${i}"><img src="assets/${c.id}.svg" alt=""><b>${c.name}</b><small>Age ${c.age} · ${c.role}</small><small style="color:${c.color};font-weight:700">${c.perk}</small></div>`).join("");
+document.querySelectorAll(".card").forEach(c=>c.onclick=()=>start(+c.dataset.i));
+// ---------- game ----------
+const cv=$("cv"),ctx=cv.getContext("2d");let W,H,DPR;
+function SAB(){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--sab"))||0}
+function resize(){DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener("resize",resize);resize();
+const imgs={};CHARS.forEach(c=>{const i=new Image();i.src=`assets/${c.id}.svg`;imgs[c.id]=i});
+const ITEMS={cake:{e:"🍰",p:10,w:30},tea:{e:"🍵",p:10,w:25},candy:{e:"🍬",p:15,w:20},heart:{e:"💖",p:20,w:14},star:{e:"🌟",p:100,w:2.5},umb:{e:"☂️",p:0,w:2.5},cloud:{e:"⛈️",p:0,w:18}};
+let G=null,keys={},bgStars=Array.from({length:70},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.6+.3,s:Math.random()*.5+.2}));
+function start(i){
+  const c=CHARS[i];
+  G={c,x:W/2,score:0,lives:c.lives,time:60,items:[],parts:[],combo:0,maxCombo:0,hearts:0,spawn:0,shield:0,flash:0,running:true,paused:false,caught:0};
+  show(null);$("hud").classList.add("on");last=performance.now();updHud();
+}
+function pick(){let tot=0;for(const k in ITEMS)tot+=ITEMS[k].w;let r=Math.random()*tot;for(const k in ITEMS){r-=ITEMS[k].w;if(r<=0)return k}return"cake"}
+function updHud(){$("hScore").textContent="★ "+G.score;$("hLives").textContent="♥".repeat(Math.max(0,G.lives))+(G.shield>0?" ☂️":"");$("hTime").textContent="⏱ "+Math.ceil(G.time);
+  $("combo").textContent=G.combo>=5?`${G.combo}× combo! (x${mult()})`:""}
+const mult=()=>1+Math.min(4,Math.floor(G.combo/10));
+function end(){
+  G.running=false;$("hud").classList.remove("on");$("combo").textContent="";
+  save.rounds++;if(G.score>save.best)save.best=G.score;persist();
+  unlock("round1");unlock(G.c.id);if(save.rounds>=10)unlock("rounds10");
+  $("oImg").src=`assets/${G.c.id}.svg`;$("oTitle").textContent=G.lives>0?"Shift complete!":"Storm's over!";
+  $("oScore").textContent=`Score: ${G.score} · Best combo: ${G.maxCombo}`;$("oBest").textContent=`Personal best: ${save.best} · Rounds played: ${save.rounds}`;
+  $("oQuote").textContent=`“${G.c.quotes[Math.random()*2|0]}” — ${G.c.name.split(" ")[0]}`;show("sOver");
+}
+$("bAgain").onclick=()=>start(CHARS.indexOf(G.c));$("bOverTitle").onclick=()=>show("sTitle");
+function pause(p){if(!G||!G.running)return;G.paused=p;show(p?"sPause":null);if(!p)last=performance.now()}
+$("bResume").onclick=()=>pause(false);$("bQuit").onclick=()=>{G.running=false;$("hud").classList.remove("on");$("combo").textContent="";show("sTitle")};
+addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;if((e.key==="Escape"||e.key==="p")&&G&&G.running)pause(!G.paused)});
+addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+addEventListener("blur",()=>{keys={};pause(true)});
+let touchX=null;
+cv.addEventListener("pointerdown",e=>{touchX=e.clientX});cv.addEventListener("pointermove",e=>{if(touchX!==null||e.pointerType==="mouse")touchX=e.clientX});
+addEventListener("pointerup",e=>{if(e.pointerType!=="mouse")touchX=null});
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  drawBg(dt);
+  if(G&&G.running&&!G.paused)step(dt);
+  if(G&&G.running)drawGame();
+  requestAnimationFrame(loop);
+}
+function step(dt){
+  const c=G.c,trayW=Math.min(W*.3,110)*c.w,sp=Math.max(420,W*.9)*c.speed;
+  if(keys.arrowleft||keys.a){G.x-=sp*dt;touchX=null}if(keys.arrowright||keys.d){G.x+=sp*dt;touchX=null}
+  if(touchX!==null)G.x+=(touchX-G.x)*Math.min(1,dt*14);
+  G.x=Math.max(trayW/2,Math.min(W-trayW/2,G.x));
+  G.time-=dt;if(G.time<=0){G.time=0;updHud();return end()}
+  const elapsed=60-G.time,rate=.55-elapsed*.006;
+  G.spawn-=dt;if(G.spawn<=0){G.spawn=Math.max(.2,rate);const k=pick();G.items.push({k,x:20+Math.random()*(W-40),y:-30,v:(H*.28+elapsed*H*.006)*(.85+Math.random()*.3),r:Math.random()*6})}
+  const ty=H-Math.min(H*.2,150)-SAB();
+  for(const it of G.items){it.y+=it.v*dt;it.r+=dt*2;
+    if(!it.dead&&it.y>ty-20&&it.y<ty+25&&Math.abs(it.x-G.x)<trayW/2+14){it.dead=true;hit(it)}
+    if(it.y>H+40){it.dead=true;if(!["cloud","umb"].includes(it.k)&&!it.hitDone)G.combo=0}}
+  G.items=G.items.filter(i=>!i.dead);
+  for(const p of G.parts){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=500*dt;p.l-=dt}G.parts=G.parts.filter(p=>p.l>0);
+  G.shield=Math.max(0,G.shield-dt);G.flash=Math.max(0,G.flash-dt);updHud();
+}
+function burst(x,y,col,n=10){for(let i=0;i<n;i++)G.parts.push({x,y,vx:(Math.random()-.5)*300,vy:-Math.random()*300,l:.7,col})}
+function hit(it){
+  const k=it.k,ty=H-Math.min(H*.2,150);
+  if(k==="cloud"){if(G.shield>0){burst(it.x,ty,"#9cf");return}G.lives--;G.combo=0;G.flash=.35;sfx("bad");if(navigator.vibrate)navigator.vibrate(80);if(G.lives<=0){updHud();return end()}return}
+  if(k==="umb"){G.shield=8;sfx("power");unlock("shield");burst(it.x,ty,"#9cf",16);return}
+  G.combo++;G.maxCombo=Math.max(G.maxCombo,G.combo);G.caught++;save.total++;
+  G.score+=ITEMS[k].p*mult();
+  if(k==="heart"){G.hearts++;if(G.hearts>=10)unlock("hearts10")}
+  if(k==="star"){unlock("gold");sfx("gold");burst(it.x,ty,"#ffe27a",24)}else{sfx("catch");burst(it.x,ty,G.c.color)}
+  unlock("first");if(G.combo>=10)unlock("combo10");if(G.combo>=30)unlock("combo30");
+  if(G.score>=1000)unlock("s1000");if(G.score>=3000)unlock("s3000");if(G.score>=5000)unlock("s5000");
+  if(save.total>=100)unlock("total100");if(save.total%10===0)persist();
+}
+function drawBg(dt){
+  ctx.clearRect(0,0,W,H);
+  for(const s of bgStars){s.y+=s.s*dt*.02;if(s.y>1)s.y=0;ctx.globalAlpha=.4+.6*Math.abs(Math.sin(performance.now()/900+s.x*20));ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.r,0,7);ctx.fill()}
+  ctx.globalAlpha=1;
+}
+function drawGame(){
+  const c=G.c,ty=H-Math.min(H*.2,150)-SAB(),trayW=Math.min(W*.3,110)*c.w;
+  // café counter
+  const g=ctx.createLinearGradient(0,ty+30,0,H);g.addColorStop(0,"#7a4a8a");g.addColorStop(1,"#3a1f4a");ctx.fillStyle=g;ctx.fillRect(0,ty+30,W,H);
+  ctx.fillStyle="#ffffff22";ctx.fillRect(0,ty+30,W,4);
+  // character portrait behind counter (bust)
+  const im=imgs[c.id],ph=Math.min(H*.32,240),pw=ph*.75;
+  if(im.complete)ctx.drawImage(im,G.x-pw/2,ty+28-ph*.8,pw,ph);
+  // tray
+  ctx.fillStyle=G.shield>0?"#9cf":"#fff";ctx.beginPath();ctx.ellipse(G.x,ty+22,trayW/2,10,0,0,7);ctx.fill();
+  ctx.fillStyle=c.color;ctx.fillRect(G.x-trayW/2,ty+20,trayW,4);
+  if(G.shield>0){ctx.globalAlpha=.25;ctx.fillStyle="#9cf";ctx.beginPath();ctx.arc(G.x,ty+20,trayW*.7,Math.PI,0);ctx.fill();ctx.globalAlpha=1}
+  ctx.font="34px -apple-system,'Apple Color Emoji','Segoe UI Emoji',sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";
+  for(const it of G.items){ctx.save();ctx.translate(it.x,it.y);if(it.k==="star"){ctx.shadowColor="#ffe27a";ctx.shadowBlur=20}ctx.rotate(Math.sin(it.r)*.25);ctx.fillText(ITEMS[it.k].e,0,0);ctx.restore()}
+  for(const p of G.parts){ctx.globalAlpha=Math.max(0,p.l/.7);ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,3,0,7);ctx.fill()}ctx.globalAlpha=1;
+  if(G.flash>0){ctx.fillStyle=`rgba(255,60,90,${G.flash})`;ctx.fillRect(0,0,W,H)}
+}
+requestAnimationFrame(loop);
+window.__sfc={save,unlock,TROPHIES};
+</script></body></html>
